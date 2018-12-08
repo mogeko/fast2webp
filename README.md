@@ -1,10 +1,12 @@
-# picture2webp (暂定)
+# img2webp
 
 一个将 PNG、JPG、JPEG、BMP 等格式的图像文件批量 (递归) 转换为 webp 格式的 Python 脚本
 
 可以设定转换程度 (0 ~ 100)，数字越大品质越好。支持无损压缩。
 
 可以在 GNU/Linux 上运行，Mac OS 估计也可以 (没测试过)，Windows 上可能要修改一下才能用 (主要是目录地址中 `/` 与 `\` 的区别)
+
+> 想了想将项目名称改成了 `img2webp`，这样就可以少打两个字了 \_(:з」∠)\_
 
 ## 依赖
 
@@ -34,3 +36,4 @@ python3 picture2webp.py [options] [value]
 - 并发转换
 - 支持 Windows
 - 支持更多的参数
+
