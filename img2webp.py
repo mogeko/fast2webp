@@ -3,12 +3,19 @@
 import os
 import sys
 import shutil
+import time
+from threading import Thread
+from queue import Queue
 
 
 input_path = "."# 输入路径
 output_path = None # 输出路径
-quality = "80" # 压缩程度
+quality = "-q 80" # 压缩程度
+t_num = 30  # 线程池中的线程个数
 enable_gif=False # 是否转换 gif 图
+
+queue = Queue() # 创建队列示例，用于存放任务
+
 
 
 # 处理传入的参数
@@ -16,9 +23,10 @@ def args(arg):
     global quality
     global input_path
     global output_path
+    global t_num
     global enable_gif
+    
     i = 0
-
     while i < len(arg):
         # 获取压缩程度
         if arg[i] == "-q":
@@ -29,6 +37,9 @@ def args(arg):
         # 获取输出目录
         if arg[i] == "-o":
             output_path = arg[i + 1]
+        # 线程个数
+        if arg[i] == "-t":
+            t_num = int(arg[i + 1])
         # 无损压缩
         if arg[i] == "-lossless":
             quality = arg[i]
@@ -39,7 +50,7 @@ def args(arg):
 
 
 # 判断读取的文件是否是图片
-def isPicture(file):
+def is_img(file):
     if os.path.splitext(file)[1] == ".jpg":
         return True
     elif os.path.splitext(file)[1] == ".jpeg":
@@ -52,39 +63,60 @@ def isPicture(file):
         return False
 
 
-# 调用 webp 处理图像文件
-def cwebp(quality, input_dir, output_dir):
+# 将任务加入队列
+def add_queue(quality, input_dir, output_dir):
     # 读取文件列表
     files = os.listdir(input_dir)
     for file in files:
         # 判断读取的文件是否是文件夹
         if os.path.isdir(input_dir + "/" + file):
-            cwebp(quality, input_dir + "/" + file, output_dir + "/" + file)
+            add_queue(quality, input_dir + "/" + file, output_dir + "/" + file)
         else:
             # 判断输出路径是否存在
             # 按照输入目录的目录结构在输出的目录中创建文件夹
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
-            # 优化输入与输出文件路径
-            input_file = input_dir + "/" + file
-            output_file = output_dir + "/" + os.path.splitext(file)[0] + ".webp"
-            # 判断读取的文件是否是图像文件
-            if isPicture(file):
-                # cwebp
-                os.system("cwebp " + quality + " " + input_file + " -o " + output_file)
-            # 判断是否为 gif 图
-            elif (os.path.splitext(file)[1] == ".gif") & enable_gif:
-                # gif2webp 不支持无损压缩
-                if quality == "-lossless":
-                    quality = "-q 100"
-                # gif2webp
-                os.system("gif2webp " + quality + " " + input_file + " -o " + output_file)
-            else:
-                # 复制多余的文件
-                if not (input_dir == output_dir) | (os.path.splitext(file)[1] == ".webp"):
-                    output_file = output_dir + "/" + file
-                    print("copy " + input_file + " to " + output_file)
-                    shutil.copy(input_file, output_file)
+            # 将任务加入队列
+            queue.put((quality, input_dir, output_dir, file))
+
+
+# img2webp
+def img2webp(quality, input_dir, output_dir, file):
+    # 从队列中读取信息
+    # 优化输入与输出文件路径
+    input_file = input_dir + "/" + file
+    output_file = output_dir + "/" + os.path.splitext(file)[0] + ".webp"
+    # 判断读取的文件是否是图像文件
+    if is_img(file):
+        # cwebp
+        status = os.system("cwebp " + quality + " \"" + input_file + "\" -o \"" + output_file + "\" -quiet")
+        return status
+        # 判断是否为 gif 图
+    elif (os.path.splitext(file)[1] == ".gif") & enable_gif:
+        # gif2webp任务 不支持无损压缩
+        if quality == "-lossless":
+            quality = "-q 100"
+        # gif2webp
+        print("gif2webp " + quality + " \"" + input_file +
+              "\" -o \"" + output_file + "\" -quiet")
+        return status
+    else:
+        # 复制多余的文件
+        if not (input_dir == output_dir) | (os.path.splitext(file)[1] == ".webp"):
+            output_file = output_dir + "/" + file
+            # print("copy " + input_file + " to " + output_file)
+            shutil.copy(input_file, output_file)
+        return 0
+
+
+# 处理任务
+def do_job():
+    while True:
+        i = queue.get()
+        status = img2webp(i[0], i[1], i[2], i[3])
+        # 发送已完成信号
+        queue.task_done()
+
 
 
 if __name__ == "__main__":
@@ -93,5 +125,15 @@ if __name__ == "__main__":
     # 如果未指定输出目录，则使用 [输入目录]/output 作为输出目录
     if not output_path:
         output_path = input_path + "/output"
-    # 处理图像文件
-    cwebp(quality, input_path, output_path)
+
+    # 创建线程池
+    for i in range(t_num):
+        t = Thread(target=do_job)
+        t.daemon=True # 设置线程 daemon，与主线程一起退出
+        t.start()
+
+    # 给线程池里塞任务
+    # time.sleep(3)
+    add_queue(quality, input_path, output_path)
+
+    queue.join()
