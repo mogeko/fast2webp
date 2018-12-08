@@ -18,6 +18,9 @@ def args(arg):
     i = 0
 
     while i < len(arg):
+        # 无损压缩
+        if arg[i] == "-lossless":
+            quality = arg[i]
         # 获取压缩程度
         if arg[i] == "-q":
             quality = "-q " + arg[i + 1]
