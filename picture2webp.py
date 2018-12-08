@@ -2,6 +2,7 @@
 
 import os
 import sys
+import shutil
 
 
 input_path = "."# 输入路径
@@ -19,7 +20,7 @@ def args(arg):
     while i < len(arg):
         # 获取压缩程度
         if arg[i] == "-q":
-            quality = arg[i + 1]
+            quality = "-q " + arg[i + 1]
         # 获取输入目录
         if arg[i] == "-i":
             input_path = arg[i + 1]
@@ -27,6 +28,19 @@ def args(arg):
         if arg[i] == "-o":
             output_path = arg[i + 1]
         i = i + 1
+
+# 判断读取的文件是否是图片
+def isPicture(file):
+    if os.path.splitext(file)[1] == ".jpg":
+        return True
+    elif os.path.splitext(file)[1] == ".jpeg":
+        return True
+    elif os.path.splitext(file)[1] == ".png":
+        return True
+    elif os.path.splitext(file)[1] == ".bmp":
+        return True
+    else:
+        return False
 
 
 # 调用 webp 处理图像文件
@@ -37,16 +51,24 @@ def cwebp(quality, input_dir, output_dir):
         # 判断读取的文件是否是文件夹
         if os.path.isdir(input_dir + "/" + file):
             cwebp(quality, input_dir + "/" + file, output_dir + "/" + file)
-        # 判断读取的文件是否是图像文件
-        if (os.path.splitext(file)[1] == ".jpg")\
-         | (os.path.splitext(file)[1] == ".jpeg")\
-         | (os.path.splitext(file)[1] == ".png")\
-         | (os.path.splitext(file)[1] == ".bmp"):
+        else:
             # 判断输出路径是否存在
+            # 按照输入目录的目录结构在输出的目录中创建文件夹
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
-            os.system("cwebp -q " + quality + " " + input_dir + "/" + file \
-            + " -o " + output_dir + "/" + os.path.splitext(file)[0] + ".webp")
+            # 判断读取的文件是否是图像文件
+            if isPicture(file):
+                # cwebp
+                input = input_dir + "/" + file
+                output = output_dir + "/" + os.path.splitext(file)[0] + ".webp"
+                os.system("cwebp " + quality + " " + input + " -o " + output)
+            else:
+                # 复制多余的文件
+                if not (input_dir == output_dir) | (os.path.splitext(file)[1] == ".webp"):
+                    input = input_dir + "/" + file
+                    output = output_dir + "/" + file
+                    print("copy " + input + " to " + output)
+                    shutil.copy(input, output)
 
 
 if __name__ == "__main__":
