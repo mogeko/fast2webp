@@ -96,16 +96,16 @@ def img2webp(quality, input_dir, output_dir, file):
         if quality == "-lossless":
             quality = "-q 100"
         # gif2webp
-        print("gif2webp " + quality + " \"" + input_file +
+        status = os.system("gif2webp " + quality + " \"" + input_file +
               "\" -o \"" + output_file + "\" -quiet")
     else:
         # 复制多余的文件
         output_file = output_dir + "/" + file
         # print("copy " + input_file + " to " + output_file)
         shutil.copy(input_file, output_file)
-        status = "copy"
+        status = 0
     # 处理返回结果
-    if not (status == 0) | (status == "copy"):
+    if not status == 0:
         print("Failed: Didn`t conversion or copy file " + input_file)
 
 
