@@ -8,11 +8,11 @@ from threading import Thread
 from queue import Queue
 
 
-input_path = "."# 输入路径
+input_path = "." # 输入路径
 output_path = None # 输出路径
 quality = "-q 80" # 压缩程度
 t_num = 30  # 线程池中的线程个数
-enable_gif=False # 是否转换 gif 图
+enable_gif = False # 是否转换 gif 图
 
 queue = Queue() # 创建队列示例，用于存放任务
 
@@ -90,7 +90,6 @@ def img2webp(quality, input_dir, output_dir, file):
     if is_img(file):
         # cwebp
         status = os.system("cwebp " + quality + " \"" + input_file + "\" -o \"" + output_file + "\" -quiet")
-        return status
         # 判断是否为 gif 图
     elif (os.path.splitext(file)[1] == ".gif") & enable_gif:
         # gif2webp任务 不支持无损压缩
@@ -99,14 +98,15 @@ def img2webp(quality, input_dir, output_dir, file):
         # gif2webp
         print("gif2webp " + quality + " \"" + input_file +
               "\" -o \"" + output_file + "\" -quiet")
-        return status
     else:
         # 复制多余的文件
-        if not (input_dir == output_dir) | (os.path.splitext(file)[1] == ".webp"):
-            output_file = output_dir + "/" + file
-            # print("copy " + input_file + " to " + output_file)
-            shutil.copy(input_file, output_file)
-        return 0
+        output_file = output_dir + "/" + file
+        # print("copy " + input_file + " to " + output_file)
+        shutil.copy(input_file, output_file)
+        status = "copy"
+    # 处理返回结果
+    if not (status == 0) | (status == "copy"):
+        print("Failed: Didn`t conversion or copy file " + input_file)
 
 
 # 处理任务
@@ -135,5 +135,4 @@ if __name__ == "__main__":
     # 给线程池里塞任务
     # time.sleep(3)
     add_queue(quality, input_path, output_path)
-
     queue.join()
