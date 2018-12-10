@@ -15,13 +15,13 @@ class ArgManger():
         self.__init_args(args)
         self.set_args(args)
         # 如果未指定输出目录，则使用 [输入目录]/output 作为输出目录
-        if not self.output_path:
-            self.output_path = self.input_path + "/output"
+        # if not self.output_path:
+        #     self.output_path = self.input_path + "/output"
 
     def __init_args(self, args):
         self.quality = "-q 80"  # 压缩程度
         self.input_path = "."  # 输入路径
-        self.output_path = None  # 输出路径
+        self.output_path = "./output"  # 输出路径
         self.t_num = 30  # 线程池中的线程个数
         self.enable_gif = False  # 是否转换 gif 图
 
@@ -80,15 +80,13 @@ class ThreadManger(Thread):
     def run(self):
         # 启动线程
         while True:
-            try:
-                target, args = self.work_queue.get()
-                target(*args)
-                self.work_queue.task_done()
-            except:
-                break
+            target, args = self.work_queue.get()
+            target(*args)
+            self.work_queue.task_done()
+            OutManger.get_status()
 
 
-class Img2webp():
+class Coversion():
     """将图像文件转换为 webp 格式"""
 
     def __init__(self, thread_pool):
@@ -110,25 +108,35 @@ class Img2webp():
                 # 将任务加入队列
                 self.thread_pool.add_job(self.img2webp, quality,
                                  input_dir, output_dir, file, enable_gif)
+                OutManger.total_num += 1
 
     # 处理文件
     def img2webp(self, quality, input_dir, output_dir, file, enable_gif):
+        # 初始化 webp 返回值
+        status = 0
         # 优化输入与输出文件路径
         input_file = input_dir + "/" + file
         output_file = output_dir + "/" + os.path.splitext(file)[0] + ".webp"
         if self.is_img(file):
             # cwebp
-            os.system("cwebp " + quality + " \"" + input_file +
-                      "\" -o \"" + output_file + "\" -quiet")
+            status = os.system("cwebp " + quality + " \"" +
+                               input_file + "\" -o \"" + output_file + "\" -quiet")
+            OutManger.cover_num += 1
         elif (self.is_gif(file, quality) & enable_gif):
             # gif2webp
-            os.system("gif2webp " + quality + " \"" + input_file +
-                      "\" -o \"" + output_file + "\" -quiet")
+            status = os.system("gif2webp " + quality + " \"" +
+                               input_file + "\" -o \"" + output_file + "\" -quiet")
+            OutManger.cover_num += 1
         else:
             # 复制多余的文件
             output_file = output_dir + "/" + file
             # print("copy " + input_file + " to " + output_file)
             shutil.copy(input_file, output_file)
+            OutManger.copy_num += 1
+        # 处理 webp 返回值
+        if status != 0:
+            OutManger.fail_num += 1
+            OutManger.fail_list.append(input_file)
 
     # 判断读取的文件是否是 (静态) 图片
     def is_img(self, file):
@@ -154,12 +162,58 @@ class Img2webp():
             return False
 
 
+class OutManger():
+    """控制输出信息"""
+
+    total_num = 0  # 总文件数
+    cover_num = 0  # 转换的文件数 (包括失败的)
+    copy_num = 0  # 复制的文件数
+    fail_num = 0  # 失败的文件数
+    fail_list = []  # 失败的文件的地址
+
+    # 处理状态信息
+    @classmethod
+    def status(self):
+        runtime_num = OutManger.cover_num + OutManger.copy_num
+        success_num = OutManger.cover_num - OutManger.fail_num
+        coverting = ["Coverting: ", runtime_num, "/", OutManger.total_num]
+        success = ["Succeed: ", success_num]
+        copy = ["Copy: ", OutManger.copy_num]
+        fial = ["Failed: ", OutManger.fail_num]
+        out_status = ""
+
+        for i in [coverting, "  ", success, copy, fial]:
+            out_status += "".join(str(j) for j in i) + " "
+
+        return out_status
+
+    # 输出状态信息
+    @classmethod
+    def get_status(self):
+        output = OutManger.status()
+
+        print(output + "...", end='\r')
+
+    # 输出最终状态信息
+    @classmethod
+    def final_status(self):
+        output = OutManger.status()
+
+        print("---------------------------------------------------------------")
+        print(output)
+        for i in OutManger.fail_list:
+            print("Failed: " + i)
+        print("done.")
+
+
 if __name__ == "__main__":
     args = ArgManger(sys.argv)
     thread_pool = ThreadPoolManger(args.t_num)
     thread = ThreadManger(thread_pool.work_queue)
-    img2webp = Img2webp(thread_pool)
+    img2webp = Coversion(thread_pool)
 
     img2webp.run(args.quality, args.input_path, args.output_path, args.enable_gif)
-    
+
     thread.work_queue.join()
+
+    OutManger.final_status()
