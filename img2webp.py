@@ -16,6 +16,7 @@ class ArgManger():
     output_path = "./output"  # 输出路径
     t_num = 30  # 线程池中的线程个数
     enable_gif = False  # 是否转换 gif 图
+    uncopy = False # 不将非图片文件复制到输出目录
 
     @classmethod
     def set_args(self, args):
@@ -39,6 +40,9 @@ class ArgManger():
             # gif2webp 开关
             if (args[i] == "-enable_gif") | (args[i] == "-enable-gif"):
                 ArgManger.enable_gif = True
+            # 不将非图片文件复制到输出目录
+            if args[i] == "-uncopy":
+                ArgManger.uncopy = True
             i = i + 1
 
         # 如果未指定输出目录，则使用 [输入目录]/output 作为输出目录
@@ -118,7 +122,7 @@ class Coversion():
             status = os.system("cwebp " + ArgManger.quality + " \"" +
                                input_file + "\" -o \"" + output_file + "\" -quiet")
             OutManger.cover_num += 1
-        elif (self.is_gif(file) & ArgManger.enable_gif):
+        elif (self.is_gif(file, ArgManger.quality) & ArgManger.enable_gif):
             # gif2webp
             status = os.system("gif2webp " + ArgManger.quality + " \"" +
                                input_file + "\" -o \"" + output_file + "\" -quiet")
@@ -126,13 +130,25 @@ class Coversion():
         else:
             # 复制多余的文件
             output_file = output_dir + "/" + file
-            # print("copy " + input_file + " to " + output_file)
-            shutil.copy(input_file, output_file)
-            OutManger.copy_num += 1
+            if self.is_copy(file):
+                shutil.copy(input_file, output_file)
+                OutManger.copy_num += 1
+
         # 处理 webp 返回值
         if status != 0:
             OutManger.fail_num += 1
             OutManger.fail_list.append(input_file)
+
+    # 判断文件是否需要被复制
+    def is_copy(self, file):
+        if os.path.splitext(file)[1] == ".webp":
+            return True
+        elif os.path.splitext(file)[1] == ".gif":
+            return True
+        elif not ArgManger.uncopy:
+            return True
+        else:
+            return False
 
     # 判断读取的文件是否是 (静态) 图片
     def is_img(self, file):
@@ -148,11 +164,11 @@ class Coversion():
             return False
 
     # 判断读取的文件是否是 gif 图
-    def is_gif(self, file):
+    def is_gif(self, file, quality):
         if os.path.splitext(file)[1] == ".gif":
             # gif2webp任务 不支持无损压缩
-            if ArgManger.quality == "-lossless":
-                ArgManger.quality = "-q 100"
+            if quality == "-lossless":
+                quality = "-q 100"
             return True
         else:
             return False
