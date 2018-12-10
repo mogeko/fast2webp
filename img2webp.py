@@ -182,37 +182,29 @@ class OutManger():
     copy_num = 0  # 复制的文件数
     fail_num = 0  # 失败的文件数
     fail_list = []  # 失败的文件的地址
-
-    # 处理状态信息
-    @classmethod
-    def status(self):
-        runtime_num = OutManger.cover_num + OutManger.copy_num
-        success_num = OutManger.cover_num - OutManger.fail_num
-        coverting = ["Coverting: ", runtime_num, "/", OutManger.total_num]
-        success = ["Succeed: ", success_num]
-        copy = ["Copy: ", OutManger.copy_num]
-        fial = ["Failed: ", OutManger.fail_num]
-        out_status = ""
-
-        for i in [coverting, "  ", success, copy, fial]:
-            out_status += "".join(str(j) for j in i) + " "
-
-        return out_status
+    start_time = int(time.time())  # 程序开始时间
 
     # 输出状态信息
     @classmethod
     def get_status(self):
-        output = OutManger.status()
+        use_time = str(int(time.time()) - OutManger.start_time) + "s"
+        runtime_num = OutManger.cover_num + OutManger.copy_num
+        status = str(runtime_num) + "/" + str(OutManger.total_num)
 
-        print(output + "...", end='\r')
+        print("Coverting " + status + " in " + use_time + " ...", end='\r')
 
     # 输出最终状态信息
     @classmethod
     def final_status(self):
-        output = OutManger.status()
+        # output = OutManger.status()
+        total = "Processing file " + str(OutManger.total_num) + " ("
+        covered = "covered: " + str(OutManger.cover_num - OutManger.fail_num)
+        copy = " copy: " + str(OutManger.copy_num)
+        fail = " failed: " + str(OutManger.fail_num) + ") "
+        use_time = str(int(time.time()) - OutManger.start_time) + "s"
 
         print("---------------------------------------------------------------")
-        print(output)
+        print(total + covered + copy + fail + "in " + use_time)
         for i in OutManger.fail_list:
             print("Failed: " + i)
         print("done.")

@@ -2,7 +2,7 @@
 
 一个将 PNG、JPG、JPEG、BMP、GIF 等格式的图像文件批量 (递归) 转换为 webp 格式的 Python 脚本
 
-可以设定转换程度 (0 ~ 100)，数字越大品质越好。支持无损压缩。支持多线程。
+可以设定压缩级别 (0 ~ 100)，数字越大品质越好。支持无损压缩。支持多线程。
 
 可以在 GNU/Linux 上运行，Mac OS 估计也可以 (没测试过)，Windows 上可能要修改一下才能用 (主要是目录地址中 `/` 与 `\` 的区别)
 
@@ -32,7 +32,7 @@ img2webp [options] [value]
 
 ## 截图
 
-![example](https://f.cangg.cn:82/data/201812101414501580.gif)
+![example](https://f.cangg.cn:82/data/201812101736504601.gif)
 
 ## 参数 (options)
 
