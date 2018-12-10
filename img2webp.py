@@ -11,42 +11,39 @@ from queue import Queue
 class ArgManger():
     """处理参数列表"""
 
-    def __init__(self, args):
-        self.__init_args(args)
-        self.set_args(args)
-        # 如果未指定输出目录，则使用 [输入目录]/output 作为输出目录
-        # if not self.output_path:
-        #     self.output_path = self.input_path + "/output"
+    quality = "-q 80"  # 压缩程度
+    input_path = "."  # 输入路径
+    output_path = "./output"  # 输出路径
+    t_num = 30  # 线程池中的线程个数
+    enable_gif = False  # 是否转换 gif 图
 
-    def __init_args(self, args):
-        self.quality = "-q 80"  # 压缩程度
-        self.input_path = "."  # 输入路径
-        self.output_path = "./output"  # 输出路径
-        self.t_num = 30  # 线程池中的线程个数
-        self.enable_gif = False  # 是否转换 gif 图
-
+    @classmethod
     def set_args(self, args):
         i = 1
         while i < len(args):
             # 获取压缩程度
             if args[i] == "-q":
-                self.quality = "-q " + args[i + 1]
+                ArgManger.quality = "-q " + args[i + 1]
             # 获取输入目录
             if args[i] == "-i":
-                self.input_path = args[i + 1]
+                ArgManger.input_path = args[i + 1]
             # 获取输出目录
             if args[i] == "-o":
-                self.output_path = args[i + 1]
+                ArgManger.output_path = args[i + 1]
             # 线程个数
             if args[i] == "-t":
-                self.t_num = int(args[i + 1])
+                ArgManger.t_num = int(args[i + 1])
             # 无损压缩
             if args[i] == "-lossless":
-                self.quality = args[i]
+                ArgManger.quality = args[i]
             # gif2webp 开关
             if (args[i] == "-enable_gif") | (args[i] == "-enable-gif"):
-                self.enable_gif = True
+                ArgManger.enable_gif = True
             i = i + 1
+
+        # 如果未指定输出目录，则使用 [输入目录]/output 作为输出目录
+        # if not self.output_path:
+        #     self.output_path = self.input_path + "/output"
 
 
 class ThreadPoolManger():
@@ -93,25 +90,24 @@ class Coversion():
         self.thread_pool = thread_pool
 
     # 读取目录信息
-    def run(self, quality, input_dir, output_dir, enable_gif):
+    def run(self, input_dir, output_dir):
         # 读取文件列表
         files = os.listdir(input_dir)
         for file in files:
             # 判断读取的文件是否是文件夹
             if os.path.isdir(input_dir + "/" + file):
-                self.run(quality, input_dir + "/" + file, output_dir + "/" + file, enable_gif)
+                self.run(input_dir + "/" + file, output_dir + "/" + file)
             else:
                 # 判断输出路径是否存在
                 # 按照输入目录的目录结构在输出的目录中创建文件夹
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
                 # 将任务加入队列
-                self.thread_pool.add_job(self.img2webp, quality,
-                                 input_dir, output_dir, file, enable_gif)
+                self.thread_pool.add_job(self.img2webp, input_dir, output_dir, file)
                 OutManger.total_num += 1
 
     # 处理文件
-    def img2webp(self, quality, input_dir, output_dir, file, enable_gif):
+    def img2webp(self, input_dir, output_dir, file):
         # 初始化 webp 返回值
         status = 0
         # 优化输入与输出文件路径
@@ -119,12 +115,12 @@ class Coversion():
         output_file = output_dir + "/" + os.path.splitext(file)[0] + ".webp"
         if self.is_img(file):
             # cwebp
-            status = os.system("cwebp " + quality + " \"" +
+            status = os.system("cwebp " + ArgManger.quality + " \"" +
                                input_file + "\" -o \"" + output_file + "\" -quiet")
             OutManger.cover_num += 1
-        elif (self.is_gif(file, quality) & enable_gif):
+        elif (self.is_gif(file) & ArgManger.enable_gif):
             # gif2webp
-            status = os.system("gif2webp " + quality + " \"" +
+            status = os.system("gif2webp " + ArgManger.quality + " \"" +
                                input_file + "\" -o \"" + output_file + "\" -quiet")
             OutManger.cover_num += 1
         else:
@@ -152,11 +148,11 @@ class Coversion():
             return False
 
     # 判断读取的文件是否是 gif 图
-    def is_gif(self, file, quality):
+    def is_gif(self, file):
         if os.path.splitext(file)[1] == ".gif":
             # gif2webp任务 不支持无损压缩
-            if quality == "-lossless":
-                quality = "-q 100"
+            if ArgManger.quality == "-lossless":
+                ArgManger.quality = "-q 100"
             return True
         else:
             return False
@@ -207,12 +203,12 @@ class OutManger():
 
 
 if __name__ == "__main__":
-    args = ArgManger(sys.argv)
-    thread_pool = ThreadPoolManger(args.t_num)
+    ArgManger.set_args(sys.argv)
+    thread_pool = ThreadPoolManger(ArgManger.t_num)
     thread = ThreadManger(thread_pool.work_queue)
     img2webp = Coversion(thread_pool)
 
-    img2webp.run(args.quality, args.input_path, args.output_path, args.enable_gif)
+    img2webp.run(ArgManger.input_path, ArgManger.output_path)
 
     thread.work_queue.join()
 
