@@ -14,7 +14,7 @@ class ArgManger():
     quality = "-q 80"  # 压缩程度
     input_path = "."  # 输入路径
     output_path = "./output"  # 输出路径
-    t_num = 30  # 线程池中的线程个数
+    t_num = 10  # 线程池中的线程个数
     enable_gif = False  # 是否转换 gif 图
     uncopy = False # 不将非图片文件复制到输出目录
 
@@ -194,16 +194,16 @@ class OutManger():
         '''输出状态信息'''
         use_time = str(int(time.time()) - self.start_time) + "s"
         runtime_num = self.cover_num + self.copy_num
-        status = str(runtime_num) + "/" + str(self.total_num)
+        status = "Coverting " +  str(runtime_num) + "/" + str(self.total_num)
 
-        print(cursor + "Coverting " + status + " in " + use_time + " ...", end='\r')
+        print(cursor + status + " in " + use_time + " ...", end='\r')
 
     def final_status(self):
         '''输出最终状态信息'''
         total = "Processing file " + str(self.total_num) + " ("
-        covered = "coversion: " + str(self.cover_num - self.fail_num)
-        copy = " copy: " + str(self.copy_num)
-        fail = " failed: " + str(self.fail_num) + ") "
+        covered = "coversion:" + str(self.cover_num - self.fail_num) + " | "
+        copy = "copy:" + str(self.copy_num) + " | "
+        fail = "fail:" + str(self.fail_num) + ") "
         use_time = str(int(time.time()) - self.start_time) + "s"
 
         print("---------------------------------------------------------------")
