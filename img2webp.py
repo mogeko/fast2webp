@@ -9,7 +9,7 @@ from queue import Queue
 
 
 class ArgManger():
-    """处理参数列表"""
+    '''处理参数列表'''
 
     quality = "-q 80"  # 压缩程度
     input_path = "."  # 输入路径
@@ -19,30 +19,31 @@ class ArgManger():
     uncopy = False # 不将非图片文件复制到输出目录
 
     @classmethod
-    def set_args(self, args):
+    def set_args(cls, args):
+        '''处理各个参数'''
         i = 1
         while i < len(args):
             # 获取压缩程度
             if args[i] == "-q":
-                ArgManger.quality = "-q " + args[i + 1]
+                cls.quality = "-q " + args[i + 1]
             # 获取输入目录
             if args[i] == "-i":
-                ArgManger.input_path = args[i + 1]
+                cls.input_path = args[i + 1]
             # 获取输出目录
             if args[i] == "-o":
-                ArgManger.output_path = args[i + 1]
+                cls.output_path = args[i + 1]
             # 线程个数
             if args[i] == "-t":
-                ArgManger.t_num = int(args[i + 1])
+                cls.t_num = int(args[i + 1])
             # 无损压缩
             if args[i] == "-lossless":
-                ArgManger.quality = args[i]
+                cls.quality = args[i]
             # gif2webp 开关
             if (args[i] == "-enable_gif") | (args[i] == "-enable-gif"):
-                ArgManger.enable_gif = True
+                cls.enable_gif = True
             # 不将非图片文件复制到输出目录
             if args[i] == "-uncopy":
-                ArgManger.uncopy = True
+                cls.uncopy = True
             i = i + 1
 
         # 如果未指定输出目录，则使用 [输入目录]/output 作为输出目录
@@ -54,13 +55,13 @@ class ThreadPoolManger():
     """线程池管理器"""
 
     def __init__(self, thread_num):
-        # 初始化参数
+        '''初始化参数'''
         self.work_queue = Queue()
         self.thread_num = thread_num
         self.__init_threading_pool(self.thread_num)
 
     def __init_threading_pool(self, thread_num):
-        # 初始化线程池，创建指定数量的线程池
+        '''初始化线程池，创建指定数量的线程池'''
         for i in range(thread_num):
             thread = ThreadManger(self.work_queue)
             thread.start()
@@ -71,7 +72,7 @@ class ThreadPoolManger():
 
 
 class ThreadManger(Thread):
-    """定义线程类，继承threading.Thread"""
+    '''定义线程类，继承 threading.Thread'''
 
     def __init__(self, work_queue):
         Thread.__init__(self)
@@ -79,12 +80,11 @@ class ThreadManger(Thread):
         self.daemon = True
 
     def run(self):
-        # 启动线程
+        '''启动线程'''
         while True:
             target, args = self.work_queue.get()
             target(*args)
             self.work_queue.task_done()
-            OutManger.get_status()
 
 
 class Coversion():
@@ -93,8 +93,8 @@ class Coversion():
     def __init__(self, thread_pool):
         self.thread_pool = thread_pool
 
-    # 读取目录信息
     def run(self, input_dir, output_dir):
+        '''读取目录信息'''
         # 读取文件列表
         files = os.listdir(input_dir)
         for file in files:
@@ -110,8 +110,8 @@ class Coversion():
                 self.thread_pool.add_job(self.img2webp, input_dir, output_dir, file)
                 OutManger.total_num += 1
 
-    # 处理文件
     def img2webp(self, input_dir, output_dir, file):
+        '''处理文件'''
         # 初始化 webp 返回值
         status = 0
         # 优化输入与输出文件路径
@@ -139,8 +139,8 @@ class Coversion():
             OutManger.fail_num += 1
             OutManger.fail_list.append(input_file)
 
-    # 判断文件是否需要被复制
     def is_copy(self, file):
+        '''判断文件是否需要被复制'''
         if os.path.splitext(file)[1] == ".webp":
             return True
         elif os.path.splitext(file)[1] == ".gif":
@@ -150,8 +150,8 @@ class Coversion():
         else:
             return False
 
-    # 判断读取的文件是否是 (静态) 图片
     def is_img(self, file):
+        '''判断读取的文件是否是(静态) 图片'''
         if os.path.splitext(file)[1] == ".jpg":
             return True
         elif os.path.splitext(file)[1] == ".jpeg":
@@ -163,8 +163,8 @@ class Coversion():
         else:
             return False
 
-    # 判断读取的文件是否是 gif 图
     def is_gif(self, file, quality):
+        '''判断读取的文件是否是 gif 图'''
         if os.path.splitext(file)[1] == ".gif":
             # gif2webp任务 不支持无损压缩
             if quality == "-lossless":
@@ -184,28 +184,31 @@ class OutManger():
     fail_list = []  # 失败的文件的地址
     start_time = int(time.time())  # 程序开始时间
 
-    # 输出状态信息
-    @classmethod
-    def get_status(self):
-        use_time = str(int(time.time()) - OutManger.start_time) + "s"
-        runtime_num = OutManger.cover_num + OutManger.copy_num
-        status = str(runtime_num) + "/" + str(OutManger.total_num)
+    def spinning_cursor(self):
+        '''这是一个会动的光标'''
+        while True:
+            for cursor in ["｜", "／", "－", "＼"]:
+                yield cursor
 
-        print("Coverting " + status + " in " + use_time + " ...", end='\r')
+    def get_status(self, cursor):
+        '''输出状态信息'''
+        use_time = str(int(time.time()) - self.start_time) + "s"
+        runtime_num = self.cover_num + self.copy_num
+        status = str(runtime_num) + "/" + str(self.total_num)
 
-    # 输出最终状态信息
-    @classmethod
+        print(cursor + "Coverting " + status + " in " + use_time + " ...", end='\r')
+
     def final_status(self):
-        # output = OutManger.status()
-        total = "Processing file " + str(OutManger.total_num) + " ("
-        covered = "covered: " + str(OutManger.cover_num - OutManger.fail_num)
-        copy = " copy: " + str(OutManger.copy_num)
-        fail = " failed: " + str(OutManger.fail_num) + ") "
-        use_time = str(int(time.time()) - OutManger.start_time) + "s"
+        '''输出最终状态信息'''
+        total = "Processing file " + str(self.total_num) + " ("
+        covered = "coversion: " + str(self.cover_num - self.fail_num)
+        copy = " copy: " + str(self.copy_num)
+        fail = " failed: " + str(self.fail_num) + ") "
+        use_time = str(int(time.time()) - self.start_time) + "s"
 
         print("---------------------------------------------------------------")
         print(total + covered + copy + fail + "in " + use_time)
-        for i in OutManger.fail_list:
+        for i in self.fail_list:
             print("Failed: " + i)
         print("done.")
 
@@ -215,9 +218,15 @@ if __name__ == "__main__":
     thread_pool = ThreadPoolManger(ArgManger.t_num)
     thread = ThreadManger(thread_pool.work_queue)
     img2webp = Coversion(thread_pool)
+    output = OutManger()
 
     img2webp.run(ArgManger.input_path, ArgManger.output_path)
 
-    thread.work_queue.join()
-
-    OutManger.final_status()
+    cursor = output.spinning_cursor()
+    # 阻塞主线程，直到子线程中的任务执行完毕
+    while thread.work_queue.unfinished_tasks > 0:
+        time.sleep(0.1)
+        output.get_status(cursor.__next__() + " ")
+    else:
+        time.sleep(0.5)
+        output.final_status()

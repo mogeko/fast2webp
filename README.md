@@ -32,7 +32,7 @@ img2webp [options] [value]
 
 ## 截图
 
-![example](https://f.cangg.cn:82/data/201812101736504601.gif)
+![example](https://f.cangg.cn:82/data/201812111203537788.gif)
 
 ## 参数 (options)
 
