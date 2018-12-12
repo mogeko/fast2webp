@@ -7,7 +7,6 @@ import time
 from threading import Thread
 from queue import Queue
 
-
 class ArgManger():
     '''处理参数列表'''
 
@@ -226,7 +225,7 @@ class OutManger():
         print("done.")
 
 
-if __name__ == "__main__":
+def main():
     ArgManger.set_args(sys.argv)
     thread_pool = ThreadPoolManger(ArgManger.t_num)
     thread = ThreadManger(thread_pool.work_queue)
@@ -243,3 +242,7 @@ if __name__ == "__main__":
     else:
         time.sleep(0.5)
         output.final_status()
+
+
+if __name__ == "__main__":
+    main()
