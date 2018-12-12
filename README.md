@@ -32,7 +32,7 @@ img2webp [options] [value]
 
 ## 截图
 
-![example](https://f.cangg.cn:82/data/201812111203537788.gif)
+![example](https://f.cangg.cn:82/data/20181212919534407.gif)
 
 ## 参数 (options)
 
@@ -44,6 +44,7 @@ img2webp [options] [value]
 |     -o      |   ./output   | `*.webp` 文件的输出目录。<br>输出目录结构与输入目录保持一致。<br>如果输出不存则会按照给定的路径新建文件夹。<br>如果缺省，则会在当前目录中新建并输出到目录 `output` |
 |     -q      |      80      | 与 `cwebp` 中相同。表示压缩的程度 (0 ~ 100)，数字越大品质越好。 |
 |     -t      |      10      | 线程池中线程的个数。数字越大转换速度越快，当然，也更吃资源。 |
+|    -only    |     off      | 只执行某单一任务。可接受的值有：`png`、`jpg`、`bmp`、`gif`<br>例如：`-only png` 表示只转换输入目录中的 png 文件为到输出目录 |
 |  -lossless  |      -       | 与 `cwebp` 中相同。无损压缩。                                |
 | -enable_gif |      -       | 将 gif 转为 webp (默认情况下会跳过 gif 文件)<br>转换 gif 文件比较吃资源，而且可能出现压缩后的 webp 比原 gif 大的情况，慎用。<br>转换 gif 文件不支持无损压缩，如果使用了 `-lossless` 参数会被理解成 `-q 100` |
 |   -uncopy   |      -       | 默认情况下会将非图片文件复制到输出目录中<br>使用参数 `-uncopy` 关闭这一特性 (`*.webp` 和 `*.gif` 仍会被复制) |

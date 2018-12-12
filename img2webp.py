@@ -17,6 +17,7 @@ class ArgManger():
     t_num = 10  # 线程池中的线程个数
     enable_gif = False  # 是否转换 gif 图
     uncopy = False # 不将非图片文件复制到输出目录
+    only = "off" # 只转换某一类型的文件
 
     @classmethod
     def set_args(cls, args):
@@ -44,11 +45,10 @@ class ArgManger():
             # 不将非图片文件复制到输出目录
             if args[i] == "-uncopy":
                 cls.uncopy = True
-            i = i + 1
-
-        # 如果未指定输出目录，则使用 [输入目录]/output 作为输出目录
-        # if not self.output_path:
-        #     self.output_path = self.input_path + "/output"
+            # 是否只转换某一类型的文件
+            if args[i] == "-only":
+                cls.only = args[i + 1]
+            i += 1
 
 
 class ThreadPoolManger():
@@ -122,55 +122,65 @@ class Coversion():
             status = os.system("cwebp " + ArgManger.quality + " \"" +
                                input_file + "\" -o \"" + output_file + "\" -quiet")
             OutManger.cover_num += 1
-        elif (self.is_gif(file, ArgManger.quality) & ArgManger.enable_gif):
+        elif self.is_gif(file):
             # gif2webp
             status = os.system("gif2webp " + ArgManger.quality + " \"" +
                                input_file + "\" -o \"" + output_file + "\" -quiet")
             OutManger.cover_num += 1
-        else:
+        elif self.is_copy(file):
             # 复制多余的文件
             output_file = output_dir + "/" + file
-            if self.is_copy(file):
-                shutil.copy(input_file, output_file)
-                OutManger.copy_num += 1
-
+            shutil.copy(input_file, output_file)
+            OutManger.copy_num += 1
         # 处理 webp 返回值
         if status != 0:
             OutManger.fail_num += 1
             OutManger.fail_list.append(input_file)
 
-    def is_copy(self, file):
-        '''判断文件是否需要被复制'''
-        if os.path.splitext(file)[1] == ".webp":
-            return True
-        elif os.path.splitext(file)[1] == ".gif":
-            return True
-        elif not ArgManger.uncopy:
-            return True
-        else:
-            return False
-
     def is_img(self, file):
         '''判断读取的文件是否是(静态) 图片'''
-        if os.path.splitext(file)[1] == ".jpg":
+        suffix = os.path.splitext(file)[1]
+        only = ArgManger.only
+        if (suffix == ".jpg") & ((only == "off") | (only == "jpg")):
             return True
-        elif os.path.splitext(file)[1] == ".jpeg":
+        elif (suffix == ".jpeg") & ((only == "off") | (only == "jpg")):
             return True
-        elif os.path.splitext(file)[1] == ".png":
+        elif (suffix == ".png") & ((only == "off") | (only == "png")):
             return True
-        elif os.path.splitext(file)[1] == ".bmp":
+        elif (suffix == ".bmp") & ((only == "off") | (only == "bmp")):
             return True
         else:
             return False
 
-    def is_gif(self, file, quality):
+    def is_gif(self, file):
         '''判断读取的文件是否是 gif 图'''
-        if os.path.splitext(file)[1] == ".gif":
+        suffix = os.path.splitext(file)[1]
+        quality = ArgManger.quality
+        enable_gif = ArgManger.enable_gif
+        only = ArgManger.only
+        if (suffix == ".gif") & (enable_gif | (only == "gif")):
             # gif2webp任务 不支持无损压缩
             if quality == "-lossless":
                 quality = "-q 100"
             return True
         else:
+            return False
+
+    def is_copy(self, file):
+        '''判断文件是否需要被复制'''
+        suffix = os.path.splitext(file)[1]
+        only = ArgManger.only
+        if only == "off":
+            if suffix == ".webp":
+                return True
+            elif suffix == ".gif":
+                return True
+            elif not ArgManger.uncopy:
+                return True
+            else:
+                return False
+        else:
+            OutManger.pass_num += 1
             return False
 
 
@@ -181,6 +191,7 @@ class OutManger():
     cover_num = 0  # 转换的文件数 (包括失败的)
     copy_num = 0  # 复制的文件数
     fail_num = 0  # 失败的文件数
+    pass_num = 0
     fail_list = []  # 失败的文件的地址
     start_time = int(time.time())  # 程序开始时间
 
@@ -200,14 +211,16 @@ class OutManger():
 
     def final_status(self):
         '''输出最终状态信息'''
+        only = ArgManger.only
         total = "Processing file " + str(self.total_num) + " ("
-        covered = "coversion:" + str(self.cover_num - self.fail_num) + " | "
-        copy = "copy:" + str(self.copy_num) + " | "
+        coversion = "coversion:" + str(self.cover_num - self.fail_num) + "|"
+        copy = "copy:" + str(self.copy_num) + "|" if (only == "off") else ""
+        pass_ = "pass:" + str(self.pass_num) + "|" if (only != "off") else ""
         fail = "fail:" + str(self.fail_num) + ") "
         use_time = str(int(time.time()) - self.start_time) + "s"
 
-        print("---------------------------------------------------------------")
-        print(total + covered + copy + fail + "in " + use_time)
+        print("--------------------------------------------------------------------")
+        print(total + coversion + copy + pass_ + fail + "in " + use_time)
         for i in self.fail_list:
             print("Failed: " + i)
         print("done.")
