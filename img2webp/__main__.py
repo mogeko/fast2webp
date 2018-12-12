@@ -4,50 +4,67 @@ import os
 import sys
 import shutil
 import time
+import argparse
 from threading import Thread
 from queue import Queue
 
 class ArgManger():
     '''处理参数列表'''
 
-    quality = "-q 80"  # 压缩程度
-    input_path = "."  # 输入路径
-    output_path = "./output"  # 输出路径
-    t_num = 10  # 线程池中的线程个数
-    enable_gif = False  # 是否转换 gif 图
-    uncopy = False # 不将非图片文件复制到输出目录
-    only = "off" # 只转换某一类型的文件
-
-    @classmethod
-    def set_args(cls, args):
+    def __init__(self):
+        self.parser = argparse.ArgumentParser(
+            description="一个将 PNG、JPG、JPEG、BMP、GIF 等格式的图像文件批量 (递归) 转换为 webp 格式的 Python 脚本",
+            formatter_class=argparse.RawTextHelpFormatter
+        )
+        self.set_args()
+        ArgManger.INPUT_PATH = self.args.input_path  # 输入路径
+        ArgManger.OUTPUT_PATH = self.args.output_path  # 输出路径
+        ArgManger.QUALITY = "-q " + self.args.quality  # 压缩程度
+        ArgManger.T_NUM = self.args.t_num   # 线程池中的线程个数
+        ArgManger.ONLY = self.args.only  # 只转换某一类型的文件
+        ArgManger.ENABLE_GIF = self.args.enable_gif  # 是否转换 gif 图
+        ArgManger.UNCOPY = self.args.uncopy  # 不将非图片文件复制到输出目录
+    
+    def set_args(self):
         '''处理各个参数'''
-        i = 1
-        while i < len(args):
-            # 获取压缩程度
-            if args[i] == "-q":
-                cls.quality = "-q " + args[i + 1]
-            # 获取输入目录
-            if args[i] == "-i":
-                cls.input_path = args[i + 1]
-            # 获取输出目录
-            if args[i] == "-o":
-                cls.output_path = args[i + 1]
-            # 线程个数
-            if args[i] == "-t":
-                cls.t_num = int(args[i + 1])
-            # 无损压缩
-            if args[i] == "-lossless":
-                cls.quality = args[i]
-            # gif2webp 开关
-            if (args[i] == "-enable_gif") | (args[i] == "-enable-gif"):
-                cls.enable_gif = True
-            # 不将非图片文件复制到输出目录
-            if args[i] == "-uncopy":
-                cls.uncopy = True
-            # 是否只转换某一类型的文件
-            if args[i] == "-only":
-                cls.only = args[i + 1]
-            i += 1
+
+        self.parser.add_argument(
+            "-i", type=str, dest="input_path", default=".",
+            help="需要转换的文件所在的目录，会递归进行转换"
+        )
+        self.parser.add_argument(
+            "-o", type=str, dest="output_path", default="./output",
+            help="*.webp 文件的输出目录，输出目录结构与输入目录保持一致\n"
+            "如果输出目录不存则会按照给定的路径新建文件夹"
+        )
+        self.quality_group = self.parser.add_mutually_exclusive_group()
+        self.quality_group.add_argument(
+            "-q", type=str, dest="quality", default="80",
+            help="与 'cwebp' 中相同。表示压缩的程度 (0 ~ 100)，数字越大品质越好"
+        )
+        self.parser.add_argument(
+            "-t", type=int, dest="t_num", default=10,
+            help="线程池中线程的个数。数字越大转换速度越快，当然，也更吃资源"
+        )
+        self.parser.add_argument(
+            "-only", dest="only",choices=["png", "jpg", "bmp", "gif"],default="off", help="只执行某单一任务\n"
+            "例如：-only png 表示只转换输入目录中的 png 文件为到输出目录"
+        )
+        self.quality_group.add_argument(
+            "-lossless", "--lossless", dest="quality", action="store_true",
+            help="与 'cwebp' 中相同。无损压缩"
+        )
+        self.parser.add_argument(
+            "-enable_gif", "--enable_gif", dest="enable_gif",action="store_true",help="将 gif 转为 webp (默认情况下会跳过 gif文件)\n"
+            "转换 gif 文件比较吃资源，慎用\n"
+            "转换 gif 文件不支持无损压缩，此时 -lossless = -q 100"
+        )
+        self.parser.add_argument(
+            "-uncopy", "--uncopy", dest="uncopy", action="store_true",
+            help="默认情况下会将非图片文件复制到输出目录中，使用参数 -uncopy 关闭这一特性\n"
+            "(*.webp 和 *.gif 仍会被复制)"
+        )
+        self.args = self.parser.parse_args()
 
 
 class ThreadPoolManger():
@@ -118,13 +135,15 @@ class Coversion():
         output_file = output_dir + "/" + os.path.splitext(file)[0] + ".webp"
         if self.is_img(file):
             # cwebp
-            status = os.system("cwebp " + ArgManger.quality + " \"" +
-                               input_file + "\" -o \"" + output_file + "\" -quiet")
+            status = os.system(
+                "cwebp " + ArgManger.QUALITY + " \"" + input_file + "\" -o \"" + output_file + "\" -quiet"
+            )
             OutManger.cover_num += 1
         elif self.is_gif(file):
             # gif2webp
-            status = os.system("gif2webp " + ArgManger.quality + " \"" +
-                               input_file + "\" -o \"" + output_file + "\" -quiet")
+            status = os.system(
+                "gif2webp " + ArgManger.QUALITY + " \"" + input_file + "\" -o \"" + output_file + "\" -quiet"
+            )
             OutManger.cover_num += 1
         elif self.is_copy(file):
             # 复制多余的文件
@@ -139,7 +158,7 @@ class Coversion():
     def is_img(self, file):
         '''判断读取的文件是否是(静态) 图片'''
         suffix = os.path.splitext(file)[1]
-        only = ArgManger.only
+        only = ArgManger.ONLY
         if (suffix == ".jpg") & ((only == "off") | (only == "jpg")):
             return True
         elif (suffix == ".jpeg") & ((only == "off") | (only == "jpg")):
@@ -154,9 +173,9 @@ class Coversion():
     def is_gif(self, file):
         '''判断读取的文件是否是 gif 图'''
         suffix = os.path.splitext(file)[1]
-        quality = ArgManger.quality
-        enable_gif = ArgManger.enable_gif
-        only = ArgManger.only
+        quality = ArgManger.QUALITY
+        enable_gif = ArgManger.ENABLE_GIF
+        only = ArgManger.ONLY
         if (suffix == ".gif") & (enable_gif | (only == "gif")):
             # gif2webp任务 不支持无损压缩
             if quality == "-lossless":
@@ -168,13 +187,13 @@ class Coversion():
     def is_copy(self, file):
         '''判断文件是否需要被复制'''
         suffix = os.path.splitext(file)[1]
-        only = ArgManger.only
+        only = ArgManger.ONLY
         if only == "off":
             if suffix == ".webp":
                 return True
             elif suffix == ".gif":
                 return True
-            elif not ArgManger.uncopy:
+            elif not ArgManger.UNCOPY:
                 return True
             else:
                 return False
@@ -210,7 +229,7 @@ class OutManger():
 
     def final_status(self):
         '''输出最终状态信息'''
-        only = ArgManger.only
+        only = ArgManger.ONLY
         total = "Processing file " + str(self.total_num) + " ("
         coversion = "coversion:" + str(self.cover_num - self.fail_num) + "|"
         copy = "copy:" + str(self.copy_num) + "|" if (only == "off") else ""
@@ -218,7 +237,7 @@ class OutManger():
         fail = "fail:" + str(self.fail_num) + ") "
         use_time = str(int(time.time()) - self.start_time) + "s"
 
-        print("--------------------------------------------------------------------")
+        print("---------------------------------------------------------------")
         print(total + coversion + copy + pass_ + fail + "in " + use_time)
         for i in self.fail_list:
             print("Failed: " + i)
@@ -226,13 +245,13 @@ class OutManger():
 
 
 def main():
-    ArgManger.set_args(sys.argv)
-    thread_pool = ThreadPoolManger(ArgManger.t_num)
+    arg_manger = ArgManger()
+    thread_pool = ThreadPoolManger(ArgManger.T_NUM)
     thread = ThreadManger(thread_pool.work_queue)
     img2webp = Coversion(thread_pool)
     output = OutManger()
 
-    img2webp.run(ArgManger.input_path, ArgManger.output_path)
+    img2webp.run(ArgManger.INPUT_PATH, ArgManger.OUTPUT_PATH)
 
     cursor = output.spinning_cursor()
     # 阻塞主线程，直到子线程中的任务执行完毕
