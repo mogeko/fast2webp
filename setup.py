@@ -1,5 +1,10 @@
+import sys
 from os import path
 from setuptools import setup, find_packages
+
+# 只支持 Python 3.5+
+if sys.version_info < (3, 5):
+    sys.exit('Python 3.5 or greater is required.')
 
 
 PACKAGE = "img2webp"
@@ -47,11 +52,12 @@ setup(
 
         'Operating System :: POSIX :: Linux',
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
+        'Topic :: Software Development',
+        'Natural Language :: Chinese (Simplified)',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3 :: Only',
         # 'Programming Language :: Python :: 3.4',
-        # 'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
