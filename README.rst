@@ -2,6 +2,26 @@
 img2webp
 =========
 
+.. Travis build - https://github.com/Mogeko/img2webp
+
+.. image:: https://travis-ci.org/Mogeko/img2webp.svg?branch=master
+	:target: https://github.com/Mogeko/img2webp
+	:alt: Travis build
+
+.. PyPI version — https://pypi.org/project/img2webp
+
+.. image:: https://img.shields.io/pypi/v/img2webp.svg
+	:target: https://pypi.org/project/img2webp
+	:alt: PyPI version
+
+.. Python version — https://pypi.org/project/img2webp
+
+.. image:: https://img.shields.io/pypi/pyversions/img2webp.svg
+	:target: https://pypi.org/project/img2webp
+	:alt: Python version
+
+
+
 一个将 PNG、JPG、JPEG、BMP、GIF 等格式的图像文件批量 (递归) 转换为 webp 格式的 Python 脚本
 
 可以设定压缩级别 (0 ~ 100)，数字越大品质越好。支持无损压缩。支持多线程。
