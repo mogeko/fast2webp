@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -222,22 +223,16 @@ class OutManger():
     def get_status(self, cursor):
         '''输出状态信息'''
         output = {
+            "cursor": cursor,
             "runtime_num": self.cover_num + self.copy_num,
             "total": self.total_num,
             "use_time": round(
                 float(round(time.time() * 100)) - self.start_time
             ) / 100
         }
-        # use_time = str(
-        #     round(float(round(time.time() * 100)) - self.start_time) /100) + "s"
-        # runtime_num = self.cover_num + self.copy_num
-        # status = "Coverting " +  str(runtime_num) + "/" + str(self.total_num)
 
         print(
-            "Coverting {runtime_num}/{total} in {use_time}s ...".format(
-                **output
-            ),
-            end='\r'
+            "{cursor} Coverting {runtime_num}/{total} in {use_time}s ...".format(**output), end='\r'
         )
 
     def final_status(self, sleep):
@@ -250,17 +245,26 @@ class OutManger():
             "copy_pass": "copy:"+str(self.copy_num) if only == "off" else "pass:"+str(self.pass_num),
             "fail": self.fail_num,
             "use_time": round(
-                float(round(time.time() * 100)) - self.start_time
-            ) / 100 - sleep
+                float(round((time.time() - sleep) * 100)) - self.start_time
+            ) / 100
         }
 
         print("---------------------------------------------------------------")
         print(
-            'Processing file {total} (coversion:{coversion}|{copy_pass}|fail:{fail}) in {use_time}s'.format(**output)
+            'Processed {total} files (coversion:{coversion}|{copy_pass}) in {use_time}s'.format(
+                **output)
         )
-        for i in self.fail_list:
-            print("Failed: " + i)
-        print("done.")
+        if len(self.fail_list) != 0:
+            print()
+            print("Some error occurred while processing these files")
+            for i in self.fail_list:
+                print("  File: " + i)
+            else:
+                print()
+                print("FAILED (errors={0})".format(output["fail"]))
+        else:
+            print()
+            print("OK")
 
 
 def main():
@@ -276,7 +280,7 @@ def main():
     # 阻塞主线程，直到子线程中的任务执行完毕
     while thread.work_queue.unfinished_tasks > 0:
         time.sleep(0.1)
-        output.get_status(cursor.__next__() + " ")
+        output.get_status(cursor.__next__())
     else:
         
         output.final_status(0.5)
