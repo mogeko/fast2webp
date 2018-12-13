@@ -57,7 +57,7 @@ fast2webp
 截图
 ---------
 
-.. image:: https://f.cangg.cn:82/data/201812131856449326.gif
+.. image:: https://f.cangg.cn:82/data/201812132140465668.gif
 
 --------------
 参数 (options)
