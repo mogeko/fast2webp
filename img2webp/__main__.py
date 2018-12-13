@@ -5,6 +5,7 @@ import os
 import sys
 import shutil
 import time
+import types
 import argparse
 from threading import Thread
 from queue import Queue
@@ -20,11 +21,14 @@ class ArgManger():
         self.set_args()
         ArgManger.INPUT_PATH = self.args.input_path  # 输入路径
         ArgManger.OUTPUT_PATH = self.args.output_path  # 输出路径
-        ArgManger.QUALITY = "-q " + self.args.quality  # 压缩程度
         ArgManger.T_NUM = self.args.t_num   # 线程池中的线程个数
         ArgManger.ONLY = self.args.only  # 只转换某一类型的文件
         ArgManger.ENABLE_GIF = self.args.enable_gif  # 是否转换 gif 图
         ArgManger.UNCOPY = self.args.uncopy  # 不将非图片文件复制到输出目录
+        if isinstance(self.args.quality, str):
+            ArgManger.QUALITY = "-q " + self.args.quality  # 压缩程度
+        else:
+            ArgManger.QUALITY = "-lossless"  # 压缩程度
     
     def set_args(self):
         '''处理各个参数'''
@@ -177,10 +181,10 @@ class Coversion():
         quality = ArgManger.QUALITY
         enable_gif = ArgManger.ENABLE_GIF
         only = ArgManger.ONLY
-        if (suffix == ".gif") & (enable_gif | (only == "gif")):
+        if (suffix==".gif")&((enable_gif&(only=="off"))|(only=="gif")):
             # gif2webp任务 不支持无损压缩
-            if quality == "-lossless":
-                quality = "-q 100"
+            if ArgManger.QUALITY == "-lossless":
+                ArgManger.QUALITY = "-q 100"
             return True
         else:
             return False
