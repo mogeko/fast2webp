@@ -128,10 +128,10 @@ class Coversion():
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
                 # 将任务加入队列
-                self.thread_pool.add_job(self.img2webp, input_dir, output_dir, file)
+                self.thread_pool.add_job(self.fast2webp, input_dir, output_dir, file)
                 OutManger.total_num += 1
 
-    def img2webp(self, input_dir, output_dir, file):
+    def fast2webp(self, input_dir, output_dir, file):
         '''处理文件'''
         # 初始化 webp 返回值
         status = 0
@@ -275,10 +275,10 @@ def main():
     arg_manger = ArgManger()
     thread_pool = ThreadPoolManger(ArgManger.T_NUM)
     thread = ThreadManger(thread_pool.work_queue)
-    img2webp = Coversion(thread_pool)
+    fast2webp = Coversion(thread_pool)
     output = OutManger()
 
-    img2webp.run(ArgManger.INPUT_PATH, ArgManger.OUTPUT_PATH)
+    fast2webp.run(ArgManger.INPUT_PATH, ArgManger.OUTPUT_PATH)
 
     cursor = output.spinning_cursor()
     # 阻塞主线程，直到子线程中的任务执行完毕

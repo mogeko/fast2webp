@@ -1,23 +1,23 @@
-=========
-img2webp
-=========
+==========
+fast2webp
+==========
 
-.. Travis build - https://github.com/Mogeko/img2webp
+.. Travis build - https://github.com/Mogeko/fast2webp
 
-.. image:: https://travis-ci.org/Mogeko/img2webp.svg?branch=master
-	:target: https://github.com/Mogeko/img2webp
+.. image:: https://travis-ci.org/Mogeko/fast2webp.svg?branch=master
+	:target: https://github.com/Mogeko/fast2webp
 	:alt: Travis build
 
-.. PyPI version — https://pypi.org/project/img2webp
+.. PyPI version — https://pypi.org/project/fast2webp
 
-.. image:: https://img.shields.io/pypi/v/img2webp.svg
-	:target: https://pypi.org/project/img2webp
+.. image:: https://img.shields.io/pypi/v/fast2webp.svg
+	:target: https://pypi.org/project/fast2webp
 	:alt: PyPI version
 
-.. Python version — https://pypi.org/project/img2webp
+.. Python version — https://pypi.org/project/fast2webp
 
-.. image:: https://img.shields.io/pypi/pyversions/img2webp.svg
-	:target: https://pypi.org/project/img2webp
+.. image:: https://img.shields.io/pypi/pyversions/fast2webp.svg
+	:target: https://pypi.org/project/fast2webp
 	:alt: Python version
 
 
@@ -28,7 +28,7 @@ img2webp
 
 可以在 GNU/Linux 上运行，Mac OS 估计也可以 (没测试过)，Windows 上可能要修改一下才能用 (主要是目录地址中 ``/`` 与 ``\`` 的区别)
 
-     想了想将项目名称改成了 ``img2webp``，这样就可以少打两个字了 _(:з」∠)_
+     突然发现 `webp` 的工具包中有一个叫 `img2webp` 的工具 (没用过所以不知道QAQ)，为了避免冲突现改名为 `fast2webp` _(:з」∠)_
 
 ---------
 依赖
@@ -43,7 +43,7 @@ img2webp
 
 ::
 
-    sudo pip3 install img2webp
+    sudo pip3 install fast2webp
 
 ---------
 使用
@@ -51,7 +51,7 @@ img2webp
 
 ::
 
-    img2webp [options] [value]
+    fast2webp [options] [value]
 
 ---------
 截图
@@ -65,7 +65,7 @@ img2webp
 
 ::
 
-    usage: img2webp [-h] [-i <dir>] [-o <dir>] [-q <int> | -lossless][-t <int>] 
+    usage: fast2webp [-h] [-i <dir>] [-o <dir>] [-q <int> | -lossless][-t <int>] 
                     [-only {png,jpg,bmp,gif}] [-enable_gif] [-uncopy]
 
     -i <dir> .......... 需要转换的文件所在的目录，会递归进行转换  (默认：.[当前目录])

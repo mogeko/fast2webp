@@ -7,15 +7,15 @@ if sys.version_info < (3, 5):
     sys.exit('Python 3.5 or greater is required.')
 
 
-PACKAGE = "img2webp"
-NAME = "img2webp"
+PACKAGE = "fast2webp"
+NAME = "fast2webp"
 DESCRIPTION = "A Python script that converts image files in PNG, JPG, JPEG, BMP, GIF batch (recursively) to webp format"
 KEYWORDS = "webp"
 AUTHOR = "Mogeko"
 AUTHOR_EMAIL = "zhengjunyi@live.com"
 LICENSE = "MIT"
 PLATFORMS = "Linux"
-URL = "https://github.com/Mogeko/img2webp"
+URL = "https://github.com/Mogeko/fast2webp"
 VERSION = __import__(PACKAGE).__version__
 
 
@@ -34,14 +34,14 @@ setup(
     author_email=AUTHOR_EMAIL,
     keywords=KEYWORDS,
 
-    packages=['img2webp'],
+    packages=['fast2webp'],
     include_package_data=True,
     zip_safe=True,
 
     platforms=PLATFORMS,
 
     entry_points={
-        'console_scripts': ['img2webp=img2webp.__main__:main'],
+        'console_scripts': ['fast2webp=fast2webp.__main__:main'],
     },
 
     classifiers=[
@@ -62,6 +62,6 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     project_urls={
-        'GitHub': 'https://github.com/Mogeko/img2webp',
+        'GitHub': 'https://github.com/Mogeko/fast2webp',
     },
 )
