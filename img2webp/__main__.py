@@ -211,7 +211,7 @@ class OutManger():
     fail_num = 0  # 失败的文件数
     pass_num = 0
     fail_list = []  # 失败的文件的地址
-    start_time = int(time.time())  # 程序开始时间
+    start_time = float(round(time.time() * 100))  # 程序开始时间
 
     def spinning_cursor(self):
         '''这是一个会动的光标'''
@@ -221,24 +221,43 @@ class OutManger():
 
     def get_status(self, cursor):
         '''输出状态信息'''
-        use_time = str(int(time.time()) - self.start_time) + "s"
-        runtime_num = self.cover_num + self.copy_num
-        status = "Coverting " +  str(runtime_num) + "/" + str(self.total_num)
+        output = {
+            "runtime_num": self.cover_num + self.copy_num,
+            "total": self.total_num,
+            "use_time": round(
+                float(round(time.time() * 100)) - self.start_time
+            ) / 100
+        }
+        # use_time = str(
+        #     round(float(round(time.time() * 100)) - self.start_time) /100) + "s"
+        # runtime_num = self.cover_num + self.copy_num
+        # status = "Coverting " +  str(runtime_num) + "/" + str(self.total_num)
 
-        print(cursor + status + " in " + use_time + " ...", end='\r')
+        print(
+            "Coverting {runtime_num}/{total} in {use_time}s ...".format(
+                **output
+            ),
+            end='\r'
+        )
 
-    def final_status(self):
+    def final_status(self, sleep):
         '''输出最终状态信息'''
+        time.sleep(sleep)
         only = ArgManger.ONLY
-        total = "Processing file " + str(self.total_num) + " ("
-        coversion = "coversion:" + str(self.cover_num - self.fail_num) + "|"
-        copy = "copy:" + str(self.copy_num) + "|" if (only == "off") else ""
-        pass_ = "pass:" + str(self.pass_num) + "|" if (only != "off") else ""
-        fail = "fail:" + str(self.fail_num) + ") "
-        use_time = str(int(time.time()) - self.start_time) + "s"
+        output = {
+            "total": self.total_num,
+            "coversion": self.cover_num-self.fail_num,
+            "copy_pass": "copy:"+str(self.copy_num) if only == "off" else "pass:"+str(self.pass_num),
+            "fail": self.fail_num,
+            "use_time": round(
+                float(round(time.time() * 100)) - self.start_time
+            ) / 100 - sleep
+        }
 
         print("---------------------------------------------------------------")
-        print(total + coversion + copy + pass_ + fail + "in " + use_time)
+        print(
+            'Processing file {total} (coversion:{coversion}|{copy_pass}|fail:{fail}) in {use_time}s'.format(**output)
+        )
         for i in self.fail_list:
             print("Failed: " + i)
         print("done.")
@@ -259,9 +278,12 @@ def main():
         time.sleep(0.1)
         output.get_status(cursor.__next__() + " ")
     else:
-        time.sleep(0.5)
-        output.final_status()
+        
+        output.final_status(0.5)
 
 
 if __name__ == "__main__":
+    # 只支持 Python 3.5+
+    if sys.version_info < (3, 5):
+        sys.exit('Python 3.5 or greater is required.')
     main()
