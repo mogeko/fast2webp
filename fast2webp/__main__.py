@@ -7,6 +7,7 @@ import shutil
 import time
 import types
 import argparse
+import signal
 from threading import Thread
 from queue import Queue
 
@@ -270,6 +271,17 @@ class OutManger():
             print()
             print("OK")
 
+    def shutdown(signalnum, space, frsme):
+        """强制退出"""
+        print("", end='\r')
+        print("---------------------------------------------------------------")
+        print(
+            "Part of the task is not completed, and we don\'t know what they are.\n"
+            "\n"
+            "please check the directory {0}".format(ArgManger.OUTPUT_PATH)
+        )
+        sys.exit(130)
+
 
 def main():
     arg_manger = ArgManger()
@@ -285,6 +297,9 @@ def main():
     while thread.work_queue.unfinished_tasks > 0:
         time.sleep(0.1)
         output.get_status(cursor.__next__())
+        # 捕捉强制退出信号
+        for sig in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]:
+            signal.signal(sig, output.shutdown)
     else:
         
         output.final_status(0.5)

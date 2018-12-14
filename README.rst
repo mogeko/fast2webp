@@ -28,7 +28,7 @@ fast2webp
 
 可以在 GNU/Linux 上运行，Mac OS 估计也可以 (没测试过)，Windows 上可能要修改一下才能用 (主要是目录地址中 ``/`` 与 ``\`` 的区别)
 
-     突然发现 `webp` 的工具包中有一个叫 `img2webp` 的工具 (没用过所以不知道QAQ)，为了避免冲突现改名为 `fast2webp` _(:з」∠)_
+     突然发现 ``webp`` 的工具包中有一个叫 ``img2webp`` 的工具 (没用过所以不知道QAQ)，为了避免冲突现将项目改名为 ``fast2webp`` _(:з」∠)_
 
 ---------
 依赖
@@ -51,7 +51,7 @@ fast2webp
 
 ::
 
-    fast2webp [options] [value]
+    fast2webp [options] <value>
 
 ---------
 截图
